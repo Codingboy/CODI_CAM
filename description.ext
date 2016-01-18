@@ -1,0 +1,11 @@
+#include "dialog.hpp"
+class CfgSounds
+{
+	sounds[] = {};
+	class CODI_SMS_AO
+	{
+		name = "CODI_SMS_AO";
+		sound[] = {"ao.ogg", 1.0, 1};
+		titles[] = {0,""};
+	};
+};
