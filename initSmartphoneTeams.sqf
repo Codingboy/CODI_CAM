@@ -1,17 +1,21 @@
-_teams = [];
-_units = playableUnits;
-_units = _units - [player];
 {
 	if (side _x == side player) then
 	{
-		_callsign = groupId(group _x);
-		if (!(_callsign in _teams)) then
+		_hasStreamer = false;
 		{
-			_teams pushBack _callsign;
+			if ([_x] call CODI_CAM_fnc_canStream && _x != player) then
+			{
+				_hasStreamer = true;
+			};
+		}
+		forEach (units _x);
+		if (_hasStreamer) then
+		{
+			_callsign = groupId(_x);
 			_index = lbAdd[4244, _callsign];
 			_color = [1,1,1,1];
 			lbSetColor [4244, _index, _color];
 		};
 	};
 }
-forEach _units;
+forEach allGroups;

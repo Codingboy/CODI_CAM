@@ -1,6 +1,8 @@
-CODI_CAM_maxDist = 50;
+if (isNil "CODI_CAM_maxDist") then
+{
+	CODI_CAM_maxDist = 2000;
+};
 CODI_CAM_colorCorrections = -1;
-
 CODI_CAM_fnc_open = {
 	private["_display","_unit"];
 	disableSerialization;
@@ -13,15 +15,32 @@ CODI_CAM_fnc_open = {
 	_display = findDisplay 46;
 	CODI_CAM_keyDownEH = _display displayAddEventHandler ["KeyDown","_this call CODI_CAM_fnc_keyDownEH"];
 };
+if (isNil "CODI_CAM_fnc_calculateQuality") then
+{
+	CODI_CAM_fnc_calculateQuality = {
+		private["_a","_b","_maxDist","_return"];
+		_a = _this select 0;
+		_b = _this select 1;
+		_maxDist = _this select 2;
+		_return = (_a distance _b)/_maxDist;
+		if (_return > 1) then
+		{
+			_return = 1;
+		};
+		_return = 1 - _return;
+		_return
+	};
+};
 CODI_CAM_fnc_update = {
+	private["_factor","_qualityReduction","_maxDist","_return"];
 	CODI_CAM_pos = ASLToAGL(eyePos CODI_CAM_unit);
+	CODI_CAM_dir = eyeDirection CODI_CAM_unit;
 	_factor = 0.15;
 	CODI_CAM_pos = [(CODI_CAM_pos select 0)+(CODI_CAM_dir select 0)*_factor,(CODI_CAM_pos select 1)+(CODI_CAM_dir select 1)*_factor,(CODI_CAM_pos select 2)+(CODI_CAM_dir select 2)*_factor];
-	CODI_CAM_dir = eyeDirection CODI_CAM_unit;
 	CODI_CAM_cam camPrepareTarget [(CODI_CAM_pos select 0)+(CODI_CAM_dir select 0),(CODI_CAM_pos select 1)+(CODI_CAM_dir select 1),(CODI_CAM_pos select 2)+(CODI_CAM_dir select 2)];
 	CODI_CAM_cam camPreparePos CODI_CAM_pos;
 	CODI_CAM_cam camCommitPrepared 0;
-	_qualityReduction = (player distance CODI_CAM_unit)/CODI_CAM_maxDist;
+	_qualityReduction = 1-([player, CODI_CAM_unit, CODI_CAM_maxDist] call CODI_CAM_fnc_calculateQuality);
 	if (_qualityReduction > 1) then
 	{
 		CODI_CAM_colorCorrections = ppEffectCreate ["ColorCorrections",2006];
@@ -71,8 +90,11 @@ CODI_CAM_fnc_keyDownEH = {
 	_return = false;
 	switch (_keyCode) do
 	{
-		_return = true;
-		call CODI_CAM_fnc_close;
+		case 1:
+		{
+			_return = true;
+			call CODI_CAM_fnc_close;
+		};
 	};
 	_return
 };
@@ -95,4 +117,25 @@ CODI_CAM_fnc_canStream = {
 		_ret = [_unit, "CODI_CAM_Camera"] call ace_common_fnc_hasItem;
 	};
 	_ret
+};
+CODI_CAM_fnc_openTeams = {
+	createDialog "CODI_CAM_SmartphoneTeams";
+};
+CODI_CAM_fnc_openUnits = {
+	CODI_CAM_team = (_this select 0) lbText (_this select 1);
+	closeDialog 0;
+	createDialog "CODI_CAM_SmartphoneUnits";
+	true
+};
+CODI_CAM_fnc_openUnit = {
+	_unit = (_this select 0) lbText (_this select 1);
+	closeDialog 0;
+	{
+		if (name _x == _unit) then
+		{
+			[_x] call CODI_CAM_fnc_open;
+		};
+	}
+	forEach allUnits;
+	true
 };
