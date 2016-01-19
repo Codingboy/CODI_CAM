@@ -15,19 +15,82 @@ CODI_CAM_fnc_open = {
 	_display = findDisplay 46;
 	CODI_CAM_keyDownEH = _display displayAddEventHandler ["KeyDown","_this call CODI_CAM_fnc_keyDownEH"];
 };
+CODI_CAM_fnc_isInBuilding = {
+	private["_unit","_dist","_pos","_intersections"];
+	_unit = _this select 0;
+	_dist = 10;
+	_pos = eyePos _unit;
+	_intersections = 0;
+	if (lineIntersects [_pos, _pos vectorAdd [0, 0, _dist]]) then
+	{
+		_intersections = _intersections + 1;
+	};
+	if (lineIntersects [_pos, _pos vectorAdd [_dist, 0, 0]]) then
+	{
+		_intersections = _intersections + 1;
+	};
+	if (lineIntersects [_pos, _pos vectorAdd [-1*_dist, 0, 0]]) then
+	{
+		_intersections = _intersections + 1;
+	};
+	if (lineIntersects [_pos, _pos vectorAdd [0, _dist, 0]]) then
+	{
+		_intersections = _intersections + 1;
+	};
+	if (lineIntersects [_pos, _pos vectorAdd [0, -1*_dist, 0]]) then
+	{
+		_intersections = _intersections + 1;
+	};
+	_intersections > 3
+};
 if (isNil "CODI_CAM_fnc_calculateQuality") then
 {
 	CODI_CAM_fnc_calculateQuality = {
-		private["_a","_b","_maxDist","_return"];
+		private["_a","_b","_maxDist","_return","_dir","_pos","_targetPos","_offsetX","_offsetY","_maxHeight","_height","_ang"];
 		_a = _this select 0;
 		_b = _this select 1;
 		_maxDist = _this select 2;
 		_return = (_a distance _b)/_maxDist;
-		if (_return > 1) then
+		if (_return >= 1) then
 		{
-			_return = 1;
+			_return = 0;
+		}
+		else
+		{
+			_return = 1 - _return;
+			if ([_a] call CODI_CAM_fnc_isInBuilding) then
+			{
+				_return = _return - 0.05;
+			};
+			if ([_b] call CODI_CAM_fnc_isInBuilding) then
+			{
+				_return = _return - 0.05;
+			};
+			_dir = [_a, _b] call BIS_fnc_dirTo;
+			_pos = getPosASL _a;
+			_targetPos = getPosASL _b;
+			_offsetX = sin(_dir)*10;
+			_offsetY = cos(_dir)*10;
+			_maxHeight = [0,0,0];
+			while {_pos distance2D _targetPos > 10} do
+			{
+				_pos = [(_pos select 0)+_offsetX, (_pos select 1)+_offsetY];
+				_height = getTerrainHeightASL _pos;
+				if (_height > (_maxHeight select 2)) then
+				{
+					_maxHeight = [_pos select 0, _pos select 1, _height];
+				};
+			};
+			if ((_maxHeight select 2) > ((getPosASL _a) select 2) && (_maxHeight select 2) > ((getPosASL _b) select 2)) then
+			{
+				_ang = acos((_maxHeight vectorDiff (getPosASL _a)) vectorCos (_maxHeight vectorDiff (getPosASL _b)));
+				if (_ang > 180) then
+				{
+					_ang = _ang - 180;
+				};
+				_return = _return * sin(_ang/2);
+			};
 		};
-		_return = 1 - _return;
 		_return
 	};
 };
@@ -41,7 +104,7 @@ CODI_CAM_fnc_update = {
 	CODI_CAM_cam camPreparePos CODI_CAM_pos;
 	CODI_CAM_cam camCommitPrepared 0;
 	_qualityReduction = 1-([player, CODI_CAM_unit, CODI_CAM_maxDist] call CODI_CAM_fnc_calculateQuality);
-	if (_qualityReduction > 1) then
+	if (_qualityReduction >= 1) then
 	{
 		CODI_CAM_colorCorrections = ppEffectCreate ["ColorCorrections",2006];
 		CODI_CAM_colorCorrections ppEffectEnable true;
@@ -170,7 +233,6 @@ CODI_CAM_fnc_handleMouseButtonClick = {
 				forEach _allUnits;
 				if (!isNull _nearestUnit) then
 				{
-					hint str (_pos distance2D(_mapControl ctrlMapWorldToScreen (getPos _nearestUnit)));
 					if (_pos distance2D(_mapControl ctrlMapWorldToScreen (getPos _nearestUnit)) < 0.05) then
 					{
 						if ([_nearestUnit] call CODI_CAM_fnc_canStream) then
@@ -178,7 +240,7 @@ CODI_CAM_fnc_handleMouseButtonClick = {
 							[_nearestUnit] call CODI_CAM_fnc_open;
 						};
 					};
-				}
+				};
 			};
 		};
 	};
