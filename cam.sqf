@@ -139,3 +139,48 @@ CODI_CAM_fnc_openUnit = {
 	forEach allUnits;
 	true
 };
+CODI_CAM_fnc_handleMouseButtonClick = {
+	private["_handled","_ctrl","_button","_mapControl","_pos","_nearesIndex","_nearestDistance","_distance","_marker"];
+	_mapControl = _this select 0;
+	_button = _this select 1;
+	_pos = [_this select 2, _this select 3];
+	_ctrl = _this select 5;
+	_handled = false;
+	if ([player] call CODI_CAM_fnc_canWatch) then
+	{
+		if (_ctrl) then
+		{
+			if (_button == 1) then
+			{
+				_allUnits = allUnits - [player];
+				_nearestUnit = objNull;
+				_distance = 999999;
+				_worldPos = _mapControl ctrlMapScreenToWorld _pos;
+				{
+					if (side _x == side player) then
+					{
+						_dist = (getPos _x) distance2D _worldPos;
+						if (_dist < _distance) then
+						{
+							_distance = _dist;
+							_nearestUnit = _x;
+						};
+					};
+				}
+				forEach _allUnits;
+				if (!isNull _nearestUnit) then
+				{
+					hint str (_pos distance2D(_mapControl ctrlMapWorldToScreen (getPos _nearestUnit)));
+					if (_pos distance2D(_mapControl ctrlMapWorldToScreen (getPos _nearestUnit)) < 0.05) then
+					{
+						if ([_nearestUnit] call CODI_CAM_fnc_canStream) then
+						{
+							[_nearestUnit] call CODI_CAM_fnc_open;
+						};
+					};
+				}
+			};
+		};
+	};
+	_handled
+};
