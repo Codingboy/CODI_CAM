@@ -7,6 +7,7 @@ CODI_CAM_fnc_open = {
 	private["_display","_unit"];
 	disableSerialization;
 	_unit = _this select 0;
+	CODI_CAM_close = false;
 	CODI_CAM_unit = _unit;
 	CODI_CAM_cam = "camera" camCreate ASLToAGL(eyePos _unit);
 	CODI_CAM_cam cameraEffect ["internal","back"];
@@ -57,15 +58,6 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 		}
 		else
 		{
-			_return = 1 - _return;
-			if ([_a] call CODI_CAM_fnc_isInBuilding) then
-			{
-				_return = _return - 0.05;
-			};
-			if ([_b] call CODI_CAM_fnc_isInBuilding) then
-			{
-				_return = _return - 0.05;
-			};
 			_dir = [_a, _b] call BIS_fnc_dirTo;
 			_pos = getPosASL _a;
 			_targetPos = getPosASL _b;
@@ -81,6 +73,8 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 					_maxHeight = [_pos select 0, _pos select 1, _height];
 				};
 			};
+			_return = ((_maxHeight distance (getPosASL _a))+(_maxHeight distance (getPosASL _b)))/_maxDist;
+			_return = 1 - _return;
 			if ((_maxHeight select 2) > ((getPosASL _a) select 2) && (_maxHeight select 2) > ((getPosASL _b) select 2)) then
 			{
 				_ang = acos((_maxHeight vectorDiff (getPosASL _a)) vectorCos (_maxHeight vectorDiff (getPosASL _b)));
@@ -89,6 +83,14 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 					_ang = _ang - 180;
 				};
 				_return = _return * sin(_ang/2);
+			};
+			if ([_a] call CODI_CAM_fnc_isInBuilding) then
+			{
+				_return = _return * 0.95;
+			};
+			if ([_b] call CODI_CAM_fnc_isInBuilding) then
+			{
+				_return = _return * 0.95;
 			};
 		};
 		_return
@@ -130,6 +132,18 @@ CODI_CAM_fnc_update = {
 	CODI_CAM_ppGrain ppEffectEnable true;
 	CODI_CAM_ppGrain ppEffectAdjust [_qualityReduction,1,1,_qualityReduction,_qualityReduction];
 	CODI_CAM_ppGrain ppEffectCommit 0;
+	if (!([CODI_CAM_unit] call CODI_CAM_fnc_canStream)) then
+	{
+		CODI_CAM_close = true;
+	};
+	if (!([player] call CODI_CAM_fnc_canWatch)) then
+	{
+		CODI_CAM_close = true;
+	};
+	if (CODI_CAM_close) then
+	{
+		call CODI_CAM_fnc_close;
+	};
 };
 CODI_CAM_fnc_close = {
 	private["_display"];
@@ -156,7 +170,7 @@ CODI_CAM_fnc_keyDownEH = {
 		case 1:
 		{
 			_return = true;
-			call CODI_CAM_fnc_close;
+			CODI_CAM_close = true;
 		};
 	};
 	_return
