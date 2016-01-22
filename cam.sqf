@@ -73,8 +73,6 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 					_maxHeight = [_pos select 0, _pos select 1, _height];
 				};
 			};
-			_return = ((_maxHeight distance (getPosASL _a))+(_maxHeight distance (getPosASL _b)))/_maxDist;
-			_return = 1 - _return;
 			if ((_maxHeight select 2) > ((getPosASL _a) select 2) && (_maxHeight select 2) > ((getPosASL _b) select 2)) then
 			{
 				_ang = acos((_maxHeight vectorDiff (getPosASL _a)) vectorCos (_maxHeight vectorDiff (getPosASL _b)));
@@ -82,16 +80,18 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 				{
 					_ang = _ang - 180;
 				};
-				_return = _return * sin(_ang/2);
+				_maxDist = _maxDist * sin(_ang/2);
 			};
 			if ([_a] call CODI_CAM_fnc_isInBuilding) then
 			{
-				_return = _return * 0.95;
+				_maxDist = _maxDist * 0.95;
 			};
 			if ([_b] call CODI_CAM_fnc_isInBuilding) then
 			{
-				_return = _return * 0.95;
+				_maxDist = _maxDist * 0.95;
 			};
+			_return = ((_maxHeight distance (getPosASL _a))+(_maxHeight distance (getPosASL _b)))/_maxDist;
+			_return = 1 - _return;
 		};
 		_return
 	};
