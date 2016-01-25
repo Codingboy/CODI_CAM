@@ -1,0 +1,5 @@
+1.1
+changed: quality algorithm
+
+1.0
+initial release
