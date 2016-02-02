@@ -1,5 +1,8 @@
 1.1
-changed: quality algorithm
+changed: quality algorithm now end transmission before maxRange is quality is bad
+changed: quality is reduced in percent in buildings
+fixed: was not working in multiplayer
+fixed: was not working if target was nearer 10m
 
 1.0
 initial release
