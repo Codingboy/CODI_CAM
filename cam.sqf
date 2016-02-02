@@ -63,7 +63,7 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 			_targetPos = getPosASL _b;
 			_offsetX = sin(_dir)*10;
 			_offsetY = cos(_dir)*10;
-			_maxHeight = [0,0,0];
+			_maxHeight = getPosASL _a;
 			while {_pos distance2D _targetPos > 10} do
 			{
 				_pos = [(_pos select 0)+_offsetX, (_pos select 1)+_offsetY];
@@ -92,6 +92,14 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 			};
 			_return = ((_maxHeight distance (getPosASL _a))+(_maxHeight distance (getPosASL _b)))/_maxDist;
 			_return = 1 - _return;
+		};
+		if (_return > 1) then
+		{
+			_return = 1;
+		};
+		if (_return < 0) then
+		{
+			_return = 0;
 		};
 		_return
 	};
