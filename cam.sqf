@@ -4,12 +4,11 @@ if (isNil "CODI_CAM_maxDist") then
 };
 CODI_CAM_colorCorrections = -1;
 CODI_CAM_fnc_open = {
-	private["_display","_unit"];
+	private["_display"];
 	disableSerialization;
-	_unit = _this select 0;
+	CODI_CAM_unit = _this select 0;
 	CODI_CAM_close = false;
-	CODI_CAM_unit = _unit;
-	CODI_CAM_cam = "camera" camCreate ASLToAGL(eyePos _unit);
+	CODI_CAM_cam = "camera" camCreate ASLToAGL(eyePos CODI_CAM_unit);
 	CODI_CAM_cam cameraEffect ["internal","back"];
 	showCinemaBorder false;
 	["CODI_CAM_update", "onEachFrame", {call CODI_CAM_fnc_update;}] call BIS_fnc_addStackedEventHandler;
@@ -93,6 +92,7 @@ if (isNil "CODI_CAM_fnc_calculateQuality") then
 			_return = ((_maxHeight distance (getPosASL _a))+(_maxHeight distance (getPosASL _b)))/_maxDist;
 			_return = 1 - _return;
 		};
+		hint str _return;
 		_return
 	};
 };
@@ -182,6 +182,10 @@ CODI_CAM_fnc_canWatch = {
 	if (isClass (configFile >> "CfgPatches" >> "CODI_CAM_ACE")) then
 	{
 		_ret = [_unit, "CODI_CAM_Tablet"] call ace_common_fnc_hasItem;
+	};
+	if (!(alive _unit)) then
+	{
+		_ret = false;
 	};
 	_ret
 };
